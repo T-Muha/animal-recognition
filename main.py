@@ -12,8 +12,9 @@ from visualizers import *
 imgHeight = 200
 imgWidth = 200
 batchSize = 32
+epochs = 15
 
-# Create a dataset from the image directories
+# Create datasets from the image directories
 # TODO - implement cross-validation
 dataDir = pathlib.Path("C:/Users/thmuh/Documents/Programming/archive/Animals-10")
 dataGenerator = tfImage.ImageDataGenerator(validation_split=0.3)
@@ -28,26 +29,44 @@ valGenerator = dataGenerator.flow_from_directory(
     batch_size = batchSize,
     subset='validation')
 
-# Take a look at the generator data
-batchX, batchY = trainGenerator.next()
-for x in batchX:
-    print(x.shape)
-print('Batch Shape: %s, Minimum: %.3f, Maximum: %.3f' % (batchX.shape, batchX.min(), batchX.max()))
-show_ndarray_images(batchX)
-batchX = np.array(map(lambda x: x.mean(), batchX))
-print(batchX.size)
-show_ndarray_images(batchX)
+# # Take a look at the generator data
+# batchX, batchY = trainGenerator.next()
+# for x in batchX:
+#     print(x.shape)
+# print('Batch Shape: %s, Minimum: %.3f, Maximum: %.3f' % (batchX.shape, batchX.min(), batchX.max()))
+# show_ndarray_images(batchX)
+# batchX = np.array(map(lambda x: x.mean(), batchX))
+# print(batchX.size)
+# show_ndarray_images(batchX)
 
 
 # !!! remember to rescale image data for the network
 
 # Define the model
-# model.fit_generator(
-#   trainGenerator,
-#   steps_per_epoch= batchSize,
-#   validation_data= valGenerator,
-#   validation_steps= batchSize,
-#   epochs=epochs?)
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Conv2D(100, (2,2), activation='relu', input_shape=(28,28,1)),
+    tf.keras.layers.MaxPooling2D(2,2),
+    # tf.keras.layers.Conv2D(64, (3,3), activation='relu', input_shape=(28,28,1)),
+    # tf.keras.layers.MaxPooling2D(2,2),
+    # tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(512, activation=tf.nn.relu),
+    tf.keras.layers.Dense(800, activation=tf.nn.relu),
+    tf.keras.layers.Dense(10, activation=tf.nn.softmax)])
+
+# compile the model
+model.compile(optimizer = tf.optimizers.Adam(),
+                loss = 'sparse_categorical_crossentropy',
+                metrics = ['accuracy'])
+
+# fit the model
+model.fit_generator(
+  trainGenerator,
+  steps_per_epoch= batchSize,
+  validation_data= valGenerator,
+  validation_steps= batchSize,
+  epochs=epochs)
 
 
 # def prepare_tensor(imageTensor, imgWidth, imgHeight):
